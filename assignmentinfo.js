@@ -84,8 +84,10 @@ BBLog.handle("add.plugin", {
             /**
              * Get your assignments. In this case we dont really use other than the assignment names
              */
-    		name = instance.getOwnName( instance );
+    		name = instance.getTargetName( instance );
     		assignments = instance.getAssignments( instance, name );
+
+            console.log(assignments);
 
             /**
              * Go through the assignments and put up the header dom
@@ -107,13 +109,21 @@ BBLog.handle("add.plugin", {
     },
 
     /**
+     * Gets the active user's name that you're browsing assignments for
+     */
+    getTargetName : function ( instance ) {
+        var name = $('.profile-venicestats-header-soldier-info-name > span').text();
+        return name;
+    },
+
+    /**
      * Get assignment data from cache if it's available, 
      * and if it isn't, refetch it, cache it to the permanent storage
      * and return it.
      */
     getAssignments : function ( instance, name ) {
 
-    	var assignments = instance.storage('assignments');
+    	var assignments = instance.storage('assignments.' + name);
 
     	if ( assignments != null ) {
     		console.log('found in storage');
@@ -122,7 +132,7 @@ BBLog.handle("add.plugin", {
 
     	console.log('did not find in storage');
     	assignments = instance.fetchAssignments( instance, name );
-    	instance.storage('assignments', assignments);
+    	instance.storage('assignments.' + name, assignments);
     	return assignments;
     },
 
