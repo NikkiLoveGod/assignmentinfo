@@ -1,13 +1,11 @@
 /**
-* Example Plugin - Show how you can use the plugin engine
-* NOTE: Do NOT set global values outside of the plugin object
-*    Maybe they will conflict with other addons or any in-page related variables
-*    Only use the plugin cache/storage to set/get variables
-*
-* @author BrainFooLong
-* @version 1.0
-* @url http://getbblog.com
-*/
+ * Assignment Info - simple plugin for better battlelog.
+ * It puts up assignment names as small headers on top of assignment images
+ * in the assignment pages allowing the user to ctrl+f through them.
+ *
+ * @author Sami "NLG" Kurvinen
+ * @version 0.1
+ */
 
 // initialize your plugin
 BBLog.handle("add.plugin", {
@@ -39,27 +37,19 @@ BBLog.handle("add.plugin", {
         },
     },
 
-    /**
-    * Config flags, added to the BBLog Options Container
-    * Config flags are served as integer, 1 or 0
-    * Every flag must be a array with following keys,
-    *   first key[0]: is the config flag name
-    *   second key[1]: is the default value that is initially setted, when the plugin is loading the first time, 1 or 0
-    *   third key[2]: (optional) must be a function, this turns the config entry into a
-    *     button and the handler will be executed when the user click on it (like plugins, themes, radar, etc..)
-    */
     configFlags : [
+
+        /**
+         * Clear configflag makes a button to the plugin configs that will
+         * clear the storage (cache) of assignment info and force refetching them
+         */
     	["Clear", 0, function(instance){
     	    instance.clearAssignmentStorage(instance);
     	}],
     ],
 
     /**
-    * A handler that be fired immediately (only once) after the plugin is loaded into bblog
-    *
-    * @param object instance The instance of your plugin which is the whole plugin object
-    *    Always use "instance" to access any plugin related function, not use "this" because it's not working properly
-    *    For example: If you add a new function to your addon, always pass the "instance" object
+    * Run on every refresh, but just once. 
     */
     init : function(instance){
         // some log to the console to show you how the things work
@@ -75,6 +65,7 @@ BBLog.handle("add.plugin", {
     *    For example: If you add a new function to your addon, always pass the "instance" object
     */
     domchange : function(instance){
+
     	$assignmentsContainer = $('.assignments-container');
     	$loadedIndicator = $('<span class="assignmentInfoLoaded"></span>');
     	loadedIndicatorFound = $assignmentsContainer.find('.assignmentInfoLoaded').length;
@@ -84,12 +75,21 @@ BBLog.handle("add.plugin", {
     	 */
     	if ( $assignmentsContainer.length > 0 && loadedIndicatorFound == 0) {
 
-    		console.log('Assignment page found and its not yet advanced');
+            /**
+             * Put up a dom element that we can search, and indicate if we have actually gone
+             * through the assignment process and it has not been resetted.
+             */
     		$assignmentsContainer.prepend($loadedIndicator);
 
+            /**
+             * Get your assignments. In this case we dont really use other than the assignment names
+             */
     		name = instance.getOwnName( instance );
     		assignments = instance.getAssignments( instance, name );
 
+            /**
+             * Go through the assignments and put up the header dom
+             */
     		$.each(assignments, function( assignmentId, assignment ) {
     			$('#' + assignmentId).prepend('<h3>' + assignment.name + '</h3>');
     		})
@@ -107,7 +107,9 @@ BBLog.handle("add.plugin", {
     },
 
     /**
-     * Get assignment data
+     * Get assignment data from cache if it's available, 
+     * and if it isn't, refetch it, cache it to the permanent storage
+     * and return it.
      */
     getAssignments : function ( instance, name ) {
 
@@ -137,7 +139,9 @@ BBLog.handle("add.plugin", {
 			data: { 
 				player: name, 
 				opt: {
-					assignments: true
+                    clear: true,
+					assignments: true,
+                    assignmentsName: true                    
 				}
 			},
 			dataType: 'json'
