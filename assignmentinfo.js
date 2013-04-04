@@ -69,11 +69,12 @@ BBLog.handle("add.plugin", {
     	$assignmentsContainer = $('.assignments-container');
     	$loadedIndicator = $('<span class="assignmentInfoLoaded"></span>');
     	loadedIndicatorFound = $assignmentsContainer.find('.assignmentInfoLoaded').length;
+        $progressBars = $assignmentsContainer.find('.progress_bar');
 
     	/**
     	 * Make sure we are in the assignments page
     	 */
-    	if ( $assignmentsContainer.length > 0 && loadedIndicatorFound == 0) {
+    	if ( $assignmentsContainer.length > 0 && loadedIndicatorFound == 0 && $progressBars.length > 0) {
 
             /**
              * Put up a dom element that we can search, and indicate if we have actually gone
@@ -122,17 +123,21 @@ BBLog.handle("add.plugin", {
      * and return it.
      */
     getAssignments : function ( instance, name ) {
+        var assignmentsStorage = {};
+    	var assignmentsStorage = instance.storage('assignments');
 
-    	var assignments = instance.storage('assignments.' + name);
-
-    	if ( assignments != null ) {
+    	if ( assignmentsStorage != null && assignmentsStorage[name] != null  ) {
     		console.log('found in storage');
-    		return assignments;
+    		return assignmentsStorage[name];
     	}
 
-    	console.log('did not find in storage');
+        if ( assignmentsStorage == null ) {
+            assignmentsStorage = {};
+        }
+
     	assignments = instance.fetchAssignments( instance, name );
-    	instance.storage('assignments.' + name, assignments);
+        assignmentsStorage[name] = assignments;
+    	instance.storage('assignments', assignmentsStorage);
     	return assignments;
     },
 
@@ -163,15 +168,31 @@ BBLog.handle("add.plugin", {
 
 			/**
 			 * Unwrap the hierarchy from assignments and store them as assignmentId : assignmentData type object in "assignments" var
-			 */
+             * Also put up the assignment completion % in the object as well.
+ 			 */
 			$.each(data.stats.assignments, function( groupId, assignmentGroup ) {
 				$.each(assignmentGroup, function( assignmentId, assignment ) {
+                    assignment.completion = instance.getAssignmentCompletion( instance, assignment );
 					assignments[assignmentId] = assignment;
 				});
 			});
 		});
 
 		return assignments;
+    },
+
+    /**
+     * Counts the percentage of assignment completion on a given assignment object
+     */
+    getAssignmentCompletion : function ( instance, assignment ) {
+        var sum = 0;
+        var completion = 0;
+
+        $.each(assignment.criteria, function ( k, criteria ) {
+            sum += criteria.curr / criteria.needed;
+        })
+        completion = Math.round(sum / assignment.criteria.length * 100) / 100;
+        return completion;
     },
 
     /**
