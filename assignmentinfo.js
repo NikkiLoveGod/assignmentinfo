@@ -95,6 +95,9 @@ BBLog.handle("add.plugin", {
 
             console.log(assignments);
 
+            sortedAssignments = instance.sortAssignmentsOnCompletion( instance, assignments );
+            console.log(sortedAssignments);
+
             /**
              * Go through the assignments and put up the header dom
              */
@@ -162,7 +165,7 @@ BBLog.handle("add.plugin", {
  			 */
 			$.each(data.stats.assignments, function( groupId, assignmentGroup ) {
 				$.each(assignmentGroup, function( assignmentId, assignment ) {
-                    assignment.completion = instance.getAssignmentCompletion( instance, assignment );
+                    assignment = instance.getAssignmentCompletion( instance, assignment );
 					assignments[assignmentId] = assignment;
 				});
 			});
@@ -182,10 +185,26 @@ BBLog.handle("add.plugin", {
         $.each(assignment.criteria, function ( k, criteria ) {
             criteriaCompletion = Math.round(criteria.curr / criteria.needed * 100) / 100;
             sum += criteriaCompletion;
-            assignment.criteria.completion = criteriaCompletion;
+            assignment.criteria[k].completion = criteriaCompletion;
         })
         assignment.completion = Math.round(sum / assignment.criteria.length * 100) / 100;
         return assignment;
+    },
+
+    /**
+     * Sorts  the given assignment object according to completion
+     */
+    sortAssignmentsOnCompletion : function ( instance, assignments ) {
+        var sorted = [];
+        $.each( assignments, function( k, v ) {
+            sorted[sorted.length] = v;
+        })
+
+        sorted.sort(function( a, b ) {
+            return b.completion - a.completion;
+        });
+
+        return sorted;
     },
 
     /**
