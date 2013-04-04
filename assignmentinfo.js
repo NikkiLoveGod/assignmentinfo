@@ -33,19 +33,24 @@ BBLog.handle("add.plugin", {
     */
     translations : {
         "en" : {
-            'Clear': 'Press to clear assignment storage'
+            // 'useStorage': 'Use caching and storage?',
+            // 'Clear': 'Press to clear assignment storage'
         },
     },
 
     configFlags : [
 
-        /**
-         * Clear configflag makes a button to the plugin configs that will
-         * clear the storage (cache) of assignment info and force refetching them
-         */
-    	["Clear", 0, function(instance){
-    	    instance.clearAssignmentStorage(instance);
-    	}],
+     //    /**
+     //     * Use storage means that it will store assignment data to storage 
+     //     */
+     //    ['useStorage', 0],
+     //    *
+     //     * Clear configflag makes a button to the plugin configs that will
+     //     * clear the storage (cache) of assignment info and force refetching them
+         
+    	// ["Clear", 0, function(instance){
+    	//     instance.clearAssignmentStorage(instance);
+    	// }],
     ],
 
     /**
@@ -118,26 +123,11 @@ BBLog.handle("add.plugin", {
     },
 
     /**
-     * Get assignment data from cache if it's available, 
-     * and if it isn't, refetch it, cache it to the permanent storage
-     * and return it.
+     * Get assignment data 
+     * @note used to contain cache data, but decided its better to update assignment data every now and then
      */
     getAssignments : function ( instance, name ) {
-        var assignmentsStorage = {};
-    	var assignmentsStorage = instance.storage('assignments');
-
-    	if ( assignmentsStorage != null && assignmentsStorage[name] != null  ) {
-    		console.log('found in storage');
-    		return assignmentsStorage[name];
-    	}
-
-        if ( assignmentsStorage == null ) {
-            assignmentsStorage = {};
-        }
-
     	assignments = instance.fetchAssignments( instance, name );
-        assignmentsStorage[name] = assignments;
-    	instance.storage('assignments', assignmentsStorage);
     	return assignments;
     },
 
@@ -183,16 +173,19 @@ BBLog.handle("add.plugin", {
 
     /**
      * Counts the percentage of assignment completion on a given assignment object
+     * @return {object} Assignment object, but updated with completion data
      */
     getAssignmentCompletion : function ( instance, assignment ) {
         var sum = 0;
         var completion = 0;
 
         $.each(assignment.criteria, function ( k, criteria ) {
-            sum += criteria.curr / criteria.needed;
+            criteriaCompletion = Math.round(criteria.curr / criteria.needed * 100) / 100;
+            sum += criteriaCompletion;
+            assignment.criteria.completion = criteriaCompletion;
         })
-        completion = Math.round(sum / assignment.criteria.length * 100) / 100;
-        return completion;
+        assignment.completion = Math.round(sum / assignment.criteria.length * 100) / 100;
+        return assignment;
     },
 
     /**
