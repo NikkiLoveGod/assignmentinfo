@@ -110,6 +110,7 @@ BBLog.handle("add.plugin", {
             $.each(unfinishedAssignments, function(k, assignment) {
                 var $UArowClone = $UArow.clone();
                 $UArowClone.find('.profile-stats-venice-awards-body-completion-value > .common-sorting-value').text(assignment.completion * 100);
+                $UArowClone.find('.profile-stats-venice-awards-body-completion-meter').css({width: (assignment.completion * 100) + '%'})
                 $UArowClone.find('.profile-stats-venice-awards-body-award-info-title a').attr('href', '#'+assignment.id).text( assignment.name + ' (' + assignment.desc + ')');
 
                 var criteriaText = '';
